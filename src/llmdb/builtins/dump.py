@@ -14,7 +14,7 @@ def dump(context, addr, *args):
       msg += ' '
     msg += '    0 1 2 3  4 5 6 7 \/ 9 a b  c d e f  01234567v9abcdef\n'
 
-  if instanceof(addr, str):
+  if isinstance(addr, str):
     addr = int(addr, 16)
 
   fmt = '%%0%dx' % (bytesize * 2)

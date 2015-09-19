@@ -1,3 +1,5 @@
+import re
+
 import functools, inspect
 from functools import wraps
 
@@ -60,3 +62,82 @@ def register(func, cmdType=COMMAND, name=None):
   dest[name] = wrapper
 
   return wrapper
+
+def isNum(number):
+  start = number[:2]
+  rest = number[2:]
+  base = None
+
+  if start in ['0i', '0I', '0b', '0B']:
+    base = 2
+  elif start in ['0o', '0O']:
+    base = 8
+  elif start in ['0t', '0T']:
+    base = 10
+  elif start in ['0x', '0X']:
+    base = 16
+
+  return (base, rest)
+
+def parseNum(number):
+  (base, value) = isNum(number)
+  if base:
+    return int(value, base)
+  else:
+    ## TODO XXX resolve symbol?
+    return int(number, 16)
+
+EXPRESSION_RE = '([/\\=?])'
+VALID_EXPRESSION = '(0[ibxt])*[0-9a-f]+,?' + EXPRESSION_RE + '*'
+
+def evalExpression(debugger, process, target, expression):
+  args = re.split(EXPRESSION_RE, expression, 1)
+
+  if len(args) == 0:
+    yield None
+
+  if len(args) > 0:
+    addr = args[0]
+  else:
+    addr = None
+
+  if ',' in addr:
+    (addr, repeat) = addr.split(',')
+    repeat = parseNum(repeat)
+  else:
+    repeat = 1
+
+  addr = parseNum(addr)
+
+  if len(args) > 1:
+    op = args[1]
+  else:
+    op = None
+
+  if len(args) > 2:
+    fmt = args[2]
+  else:
+    fmt = None
+
+  ## TODO XXX shift dot by format length
+  fmtlength = target.addr_size
+
+  for i in range(0, repeat * fmtlength, fmtlength):
+    v = (addr + i)
+    yield v
+
+    #if op is '/':
+    #  value = target.ResolveLoadAddress(addr)
+    #elif op is '\\':
+    #  ## TODO XXX physical address?
+    #  pass
+    #elif op is '=':
+    #  pass
+    #elif op is '?':
+    #  pass
+    #else:
+    #  pass
+
+def isExpression(expression):
+  ret = re.match(VALID_EXPRESSION, expression)
+  return ret != None

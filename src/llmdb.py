@@ -2,16 +2,12 @@
 
 import cmd, shlex
 
-from llmdb.commands import available
+from llmdb.commands import available, parseNum, evalExpression, isExpression
 from llmdb.pipeline import Step, Pipeline
 
 import llmdb.builtins
 
 import lldb
-
-builtins = [
-  'EOF',
-]
 
 class LLMDB(cmd.Cmd):
   def setDebugger(self, debugger, target, process):
@@ -24,6 +20,9 @@ class LLMDB(cmd.Cmd):
     return True
 
   def precmd(self, line):
+    if line == 'EOF':
+      return line
+
     raw_args = shlex.split(line)
 
     arguments = []
@@ -47,20 +46,30 @@ class LLMDB(cmd.Cmd):
       if '::' in args[0]:
         (inargs, commandName) = args[0].split('::')
       else:
-        inargs = []
+        inargs = None
         commandName = args[0]
 
-      if commandName not in available:
-        if commandName in builtins:
-          return line
+      if index == 0 and not inargs and isExpression(commandName):
+        for value in evalExpression(self.debugger,
+                                    self.process,
+                                    self.target,
+                                    commandName):
+          print value
+        break
+      elif index == 0:
+        if not inargs:
+          inputArgs = []
         else:
-          print 'unknown command %s' % (commandName)
+          inputArgs = evalExpression(self.debugger,
+                                     self.process,
+                                     self.target,
+                                     inargs)
+      elif commandName not in available:
+        print 'unknown command %s' % (commandName)
+        break
 
       piped_into = False
       piped_outof = False
-
-      if index == 0:
-        inputArgs = [inargs]
 
       if index > 0:
         piped_into = True
@@ -81,7 +90,10 @@ class LLMDB(cmd.Cmd):
     pipeline = Pipeline(steps)
 
     for results in pipeline(inputArgs):
-      print results
+      if isinstance(results, (int, long)):
+        print '0x%x' % results
+      else:
+        print results
 
     return 'default'
 
