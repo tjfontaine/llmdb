@@ -81,8 +81,10 @@ class LLMDB(cmd.Cmd):
       f.setDebugger(self.debugger, self.target, self.process)
       steps.append(f)
 
-    if inputArgs is None:
-      inputArgs = []
+    ## probably evalExpression should return dot
+    ## or an addr decorator should resolve dot
+    if inputArgs is None or (isinstance(inputArgs, list) and len(inputArgs) == 0):
+      inputArgs = [None]
 
     if len(steps) == 0:
       return line

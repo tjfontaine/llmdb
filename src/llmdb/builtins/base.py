@@ -67,3 +67,12 @@ def load(context, addr, fname):
   ::load <filename>
   """
   imp.load_source('cmd', fname)
+
+@register
+def nm(context, addr, *args):
+  for module in context.target.modules:
+    for symbol in module.symbols:
+      yield '0x%08x\t0x%08x\t%s.%s' % (symbol.addr,
+                                      int(symbol.end_addr) - int(symbol.addr),
+                                      symbol.addr.section.name,
+                                      symbol.name)
