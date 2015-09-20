@@ -60,6 +60,8 @@ def register(func, cmdType=COMMAND, name=None):
   def wrapper(*args, **kwargs):
     return func(*args, **kwargs)
 
+  wrapper.__fname__ = filename
+
   if name not in dest:
     dest[name] = wrapper
 

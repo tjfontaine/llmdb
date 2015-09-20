@@ -1,4 +1,4 @@
-import imp, inspect
+import imp
 
 import lldb
 
@@ -82,9 +82,9 @@ def which(context, addr, name, *args):
   command = available.get(name)
 
   if command:
-    yield '%s is a command from module %s' % (name, inspect.getfile(command))
+    yield '%s is a command from module %s' % (name, command.__fname__)
 
   walker  = walkers.get(name)
 
   if walker:
-    yield '%s is a walker from module %s' % (name, inspect.getfile(walker))
+    yield '%s is a walker from module %s' % (name, command.__fname__)
