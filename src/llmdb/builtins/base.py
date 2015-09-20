@@ -1,4 +1,4 @@
-import imp
+import imp, inspect
 
 import lldb
 
@@ -76,3 +76,15 @@ def nm(context, addr, *args):
                                       int(symbol.end_addr) - int(symbol.addr),
                                       symbol.addr.section.name,
                                       symbol.name)
+
+@register
+def which(context, addr, name, *args):
+  command = available.get(name)
+
+  if command:
+    yield '%s is a command from module %s' % (name, inspect.getfile(command))
+
+  walker  = walkers.get(name)
+
+  if walker:
+    yield '%s is a walker from module %s' % (name, inspect.getfile(walker))

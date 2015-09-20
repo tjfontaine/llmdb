@@ -2,7 +2,7 @@
 
 import cmd, shlex
 
-from llmdb.commands import available, parseNum, evalExpression, isExpression
+from llmdb.commands import available, parseNum, evalExpression, isExpression, fqlist
 from llmdb.pipeline import Step, Pipeline
 
 import llmdb.builtins
@@ -64,7 +64,15 @@ class LLMDB(cmd.Cmd):
                                      self.process,
                                      self.target,
                                      inargs)
-      elif commandName not in available:
+
+      func = available.get(commandName)
+
+      if not func and '`' in commandName:
+        (moduleName, commandName) = commandName.split('`')
+        module = fqlist.get(moduleName, {})
+        func = module.get(commandName)
+
+      if not func:
         print 'unknown command %s' % (commandName)
         break
 

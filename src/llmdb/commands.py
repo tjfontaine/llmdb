@@ -1,3 +1,4 @@
+import inspect
 import re
 
 import functools, inspect
@@ -5,12 +6,13 @@ from functools import wraps
 
 available = {}
 walkers = {}
+fqlist = {}
 
 class AlreadyRegistered(Exception):
   pass
 
-COMMAND=object()
-WALKER=object()
+COMMAND='COMMAND'
+WALKER='WALKER'
 
 def decorator(func):
     ''' Allow to use decorator either with arguments or not. '''
@@ -52,14 +54,25 @@ def register(func, cmdType=COMMAND, name=None):
   else:
     raise Exception("Unknown command type")
 
-  if name in dest:
-    raise AlreadyRegistered('%s already registered' % (name))
+  filename = inspect.getfile(func)
 
   @wraps(func)
   def wrapper(*args, **kwargs):
     return func(*args, **kwargs)
 
-  dest[name] = wrapper
+  if name not in dest:
+    dest[name] = wrapper
+
+  dest = fqlist.get(cmdType, {})
+  mdest = dest.get(filename, {})
+
+  if name not in mdest:
+    mdest[name] = wrapper
+  else:
+    raise AlreadyRegistered('Command "%s.%s" already registered' % (filename, name))
+
+  dest[filename] = mdest
+  fqlist[cmdType] = dest
 
   return wrapper
 
@@ -88,7 +101,7 @@ def parseNum(number):
     return int(number, 16)
 
 EXPRESSION_RE = '([/\\=?])'
-VALID_EXPRESSION = '(0[ibxt])*[0-9a-f]+,?' + EXPRESSION_RE + '*'
+VALID_EXPRESSION = '^(0[ibxt])?[0-9a-f]+(,(0[ibxt])?[0-9a-f]+)?([/\\=?]\w+)?$'
 
 def evalExpression(debugger, process, target, expression):
   args = re.split(EXPRESSION_RE, expression, 1)
