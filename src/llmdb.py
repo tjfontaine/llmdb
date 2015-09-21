@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
+import os
 import cmd, shlex
+
+from subprocess import Popen, PIPE
 
 from llmdb.commands import available, parseNum, evalExpression, isExpression, fqlist
 from llmdb.pipeline import Step, Pipeline
@@ -99,11 +102,36 @@ class LLMDB(cmd.Cmd):
 
     pipeline = Pipeline(steps)
 
+    ## TODO XXX only page on ttys
+    ## TODO XXX respect $PAGER
+    pager = Popen(['less', '-F', '-R', '-S', '-X', '-K',],
+                  stdin=PIPE,
+                  stdout=sys.stdout,
+                  stderr=sys.stderr)
+
     for results in pipeline(inputArgs):
       if isinstance(results, (int, long)):
-        print '0x%x' % results
+        msg ='0x%x' % results
       else:
-        print results
+        msg = results
+
+      try:
+        ret = pager.stdin.write(msg + os.linesep)
+      except IOError, e:
+        pager.kill()
+
+      if pager.returncode is not None:
+        break
+
+    ## pager is still alive and expecting input
+    ## we should close stdin to let it know nothing
+    ## more is coming.
+    if pager.returncode is None:
+      pager.stdin.close()
+
+    ## Wait for the graceful exit
+    while pager.returncode is not None:
+      pager.poll()
 
     return 'default'
 
