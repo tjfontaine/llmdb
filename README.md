@@ -38,6 +38,8 @@ Number formatting:
  * paged output
  * repeat expressions
  * pipelined commands
+ * bang operator (redirect output to shell pipeline)
+  - `::nm ! grep foobar | less`
 
 ## Commands
 
@@ -62,7 +64,6 @@ Number formatting:
 
 ## TODO
 
- * bang operator
  * semi-colon parsing
  * dot expressions
  * format expressions (i.e. `0xffffff/nap`)

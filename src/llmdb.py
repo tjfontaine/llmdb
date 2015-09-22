@@ -2,6 +2,8 @@
 
 import os
 import cmd, shlex
+import pipes
+import re
 
 from subprocess import Popen, PIPE
 
@@ -30,16 +32,36 @@ class LLMDB(cmd.Cmd):
 
     arguments = []
     cur = []
+    shell_arguments = None
 
-    for a in raw_args:
-      if a == '|':
-        arguments.append(cur)
-        cur = []
-        continue
-      cur.append(a)
+    for arg in raw_args:
+      ## shlex.split doesn't handle unspaced pipes, but will preserve spaces in
+      ## args, so assume that foo!bar|bash -c "grep foo|sed|awk"
+      ## TODO XXX bash -c "noarg|noarg2" wouldn't be handled either.
+      if re.search('\s', arg) is not None:
+        dargs = [arg]
+      else:
+        dargs = re.split('([|!])', arg)
+
+      for a in dargs:
+        if not a:
+          continue
+        if shell_arguments is None and a == '|':
+          arguments.append(cur)
+          cur = []
+        elif shell_arguments is None and a == '!':
+          if len(cur) > 0:
+            arguments.append(cur)
+          shell_arguments = []
+          cur = []
+        else:
+          cur.append(a)
 
     if len(cur) > 0:
-      arguments.append(cur)
+      if shell_arguments is not None:
+        shell_arguments.extend(cur)
+      else:
+        arguments.append(cur)
 
     steps = []
     stepsCount = len(arguments)
@@ -104,7 +126,21 @@ class LLMDB(cmd.Cmd):
 
     ## TODO XXX only page on ttys
     ## TODO XXX respect $PAGER
-    pager = Popen(['less', '-F', '-R', '-S', '-X', '-K',],
+    if shell_arguments is None:
+      shell_arguments = ['less', '-F', '-R', '-S', '-X', '-K']
+      use_shell = False
+    else:
+      use_shell = True
+      sargs = []
+      for s in shell_arguments:
+        if s is not '|':
+          sargs.append(pipes.quote(s))
+        else:
+          sargs.append(s)
+      shell_arguments = ' '.join(sargs)
+
+    pager = Popen(shell_arguments,
+                  shell=use_shell,
                   stdin=PIPE,
                   stdout=sys.stdout,
                   stderr=sys.stderr)
