@@ -68,12 +68,39 @@ Number formatting:
 
  * semi-colon parsing
  * dot expressions
+ * argparse style decorator for command option parsing
  * format expressions (i.e. `0xffffff/nap`)
  * as many commands as we can
- * getopt style decorator for command option parsing
+  - attach
+  - branches
+  - cat
+  - cpuregs / cpustack
+  - disasm / dismode
+  - dump's arguments
+  - echo
+  - eval
+  - files
+  - formats
+  - fpregs
+  - grep
+  - list
+  - log
+  - map
+  - mappings
+  - nm's arguments, and add/del
+  - objects
+  - offsetof
+  - print's arguments and type deduction
+  - quit
+  - regs
+  - release
+  - sizeof
+  - stack's arguments
+  - status
+  - tls
+  - unload
  * non-tty interaction
  * aliases for `$` and `:` commands
- * unload module
 
 ## Known Issues
 
