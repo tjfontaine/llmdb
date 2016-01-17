@@ -10,3 +10,6 @@ venv:
 
 install: venv
 	$(VENV)/bin/python setup.py install
+
+test:
+	$(MAKE) -C tests
