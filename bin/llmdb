@@ -1,0 +1,39 @@
+#!/usr/bin/env python2.7
+
+import platform, sys
+
+system = platform.system()
+
+if system in ['Darwin']:
+    sys.path.append('/Applications/Xcode.app/Contents/SharedFrameworks/LLDB.framework/Versions/A/Resources/Python')
+
+import argparse
+
+parser = argparse.ArgumentParser(description='LLMDB Pipeline Debugging')
+
+parser.add_argument('-c', dest='corefile')
+parser.add_argument('-p', dest='pid')
+parser.add_argument('binary')
+
+if __name__ == '__main__':
+  args = parser.parse_args()
+
+  import lldb
+  from llmdb import *
+
+  repl = cli.LLMDB()
+  repl.prompt = '> '
+
+  debugger = lldb.SBDebugger.Create()
+  debugger.SetAsync(False)
+  target = debugger.CreateTargetWithFileAndArch(args.binary, lldb.LLDB_ARCH_DEFAULT)
+  process = target.LoadCore(args.corefile)
+
+  repl.setDebugger(debugger, target, process)
+
+  try:
+    repl.cmdloop()
+  finally:
+    debugger.Terminate()
+
+  print

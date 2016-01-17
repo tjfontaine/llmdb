@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-export PYTHONPATH=/Applications/Xcode.app/Contents/SharedFrameworks/LLDB.framework/Versions/A/Resources/Python
-
-python src/llmdb.py $@

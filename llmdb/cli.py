@@ -1,18 +1,14 @@
-#!/usr/bin/env python
-
 import os
-import cmd, shlex
+import cmd
 import pipes
 import re
+import shlex
+import sys
 
 from subprocess import Popen, PIPE
 
-from llmdb.commands import available, parseNum, evalExpression, isExpression, fqlist
-from llmdb.pipeline import Step, Pipeline
-
-import llmdb.builtins
-
-import lldb
+from .commands import available, parseNum, evalExpression, isExpression, fqlist
+from .pipeline import Step, Pipeline
 
 class LLMDB(cmd.Cmd):
   def setDebugger(self, debugger, target, process):
@@ -173,21 +169,3 @@ class LLMDB(cmd.Cmd):
 
   def default(self, line):
     pass
-
-if __name__ == '__main__':
-  repl = LLMDB()
-  repl.prompt = '> '
-
-  debugger = lldb.SBDebugger.Create()
-  debugger.SetAsync(False)
-  target = debugger.CreateTargetWithFileAndArch(sys.argv[1], lldb.LLDB_ARCH_DEFAULT)
-  process = target.LoadCore(sys.argv[2])
-
-  repl.setDebugger(debugger, target, process)
-
-  try:
-    repl.cmdloop()
-  finally:
-    debugger.Terminate()
-
-  print
