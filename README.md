@@ -6,7 +6,9 @@ debugging.
 ## Example
 
 ```shell
-./llmdb ./test /cores/core.22702 
+$ make install
+$ . ./venv/bin/activate
+$ llmdb -c /cores/core.22702 ./test
 > ::walk thread | ::stack
 Thread #1
 frame #0: 0x00007fff8e3310ae libsystem_kernel.dylib`__pthread_kill + 10
