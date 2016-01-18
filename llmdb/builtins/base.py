@@ -88,3 +88,24 @@ def which(context, addr, name, *args):
 
   if walker:
     yield '%s is a walker from module %s' % (name, command.__fname__)
+
+@register
+def mappings(context, *args):
+  """Print a list of each mapping in the target's virtual address space
+
+  TODO lldb doesn't currently expose anything useful in terms of figuring out
+  the virtual address space mappings, or the modes of the sections we're
+  looking at
+  """
+
+  first = False
+  for module in context.target.module_iter():
+    for section in module.section_iter():
+      if not first:
+        first = True
+        yield '{:<16} {:<16} {:<16} {}'.format('Start', 'End', 'Size', 'File')
+      yield '{:<16} {:<16} {:<16} {}'.format('{:#x}'.format(int(section.addr)),
+                                             '{:#x}'.format(int(section.addr) + section.size),
+                                             '{:#x}'.format(section.size),
+                                             module.platform_file,
+                                             section.type)
